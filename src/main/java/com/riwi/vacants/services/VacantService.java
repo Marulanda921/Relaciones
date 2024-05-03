@@ -47,7 +47,8 @@ public class VacantService implements IVacantsService {
 
     @Override
     public void delete(Long id) {
-        // TODO Auto-generated method stub
+        Vacant vacant = this.find(id);
+        this.vacantRepository.delete(vacant);
     }
 
     @Override
@@ -61,14 +62,27 @@ public class VacantService implements IVacantsService {
 
     @Override
     public VacantsResponse getById(Long id) {
-        // TODO Auto-generated method stub
-        return null;
+        return this.entityTResponse(this.find(id));
     }
 
     @Override
     public VacantsResponse update(VacantRequest request, Long id) {
-        // TODO Auto-generated method stub
-        return null;
+
+        //Buscamos la vacante
+        Vacant vacant = this.find(id);
+        Company company = this.companyRepository.findById(request.getCompanyId()).orElseThrow(()-> new IdNotFoundException("Company"));
+        //Validamos la compañia
+        //Convertimos el dto  de equest
+        vacant = this.requestTOVacant(request, vacant);
+
+        //Agregamos la vacante
+        vacant.setCompany(company);
+
+        //Agregamos el nuevo estatus
+        vacant.setStatus(request.getStatus());
+
+        //Guardamos en la BD y retornamos el dto de respuesta
+        return this.entityTResponse(this.vacantRepository.save(vacant));
     }
 
     private VacantsResponse entityTResponse(Vacant entity){
@@ -102,7 +116,9 @@ public class VacantService implements IVacantsService {
     }
 
 
-
-
+    private Vacant find(Long id) {
+        return this.vacantRepository.findById(id)
+                .orElseThrow(()-> new IdNotFoundException("Vacant"));
+    }
 
 }
